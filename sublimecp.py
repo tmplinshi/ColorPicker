@@ -94,7 +94,7 @@ if sublime.platform() == 'windows':
         paste = None
         start_color = None
         if starting_color is not None:
-            start_color = hexstr_to_bgr(starting_color[1:])
+            start_color = hexstr_to_bgr(starting_color[2:])
         s = sublime.load_settings("ColorPicker.sublime-settings")
         custom_colors = s.get("custom_colors", ['0'] * 16)
 
@@ -289,7 +289,7 @@ class ColorPicker(object):
                 starting_color = svg_color_hex
 
             if self.is_valid_hex_color(starting_color):
-                start_color = "#" + starting_color
+                start_color = "0x" + starting_color
                 start_color_osx = starting_color
 
         if sublime.platform() == 'windows':
@@ -337,12 +337,12 @@ class ColorPicker(object):
 
 class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
     def run(self, settings, default_color=None):
-        if default_color is not None and default_color.startswith('#'):
-            default_color = default_color[1:]
+        if default_color is not None and default_color.startswith('0x'):
+            default_color = default_color[2:]
         color = ColorPicker().pick(self.window, default_color)
 
         s = sublime.load_settings(settings)
-        s.set('color_pick_return', '#' + color if color else None)
+        s.set('color_pick_return', '0x' + color if color else None)
 
 
 class ColorPickApiIsAvailableCommand(sublime_plugin.ApplicationCommand):
@@ -358,8 +358,8 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         # get the currently selected color - if any
         if len(sel) > 0:
             selected = self.view.substr(self.view.word(sel[0])).strip()
-            if selected.startswith('#'):
-                selected = selected[1:]
+            if selected.startswith('0x'):
+                selected = selected[2:]
 
         cp = ColorPicker()
         color = cp.pick(self.view.window(), selected)
@@ -378,14 +378,14 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                 word = self.view.word(region)
                 # if the selected word is a valid color, replace it
                 if cp.is_valid_hex_color(self.view.substr(word)):
-                    # include '#' if present
-                    if self.view.substr(word.a - 1) == '#':
-                        word = sublime.Region(word.a - 1, word.b)
+                    # include '0x' if present
+                    if self.view.substr(word.a - 2) == '0x':
+                        word = sublime.Region(word.a - 2, word.b)
                     # replace
-                    self.view.replace(edit, word, '#' + color)
+                    self.view.replace(edit, word, '0x' + color)
                 # otherwise just replace the selected region
                 else:
-                    self.view.replace(edit, region, '#' + color)
+                    self.view.replace(edit, region, '0x' + color)
 
 
 libdir = os.path.join('ColorPicker', 'lib')
